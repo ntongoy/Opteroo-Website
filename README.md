@@ -54,6 +54,21 @@ cp .env.example .env
 CI=false npm run build
 ```
 
+## Deploy to Vercel
+
+1. Push the repo to GitHub and go to [vercel.com](https://vercel.com).
+2. **Import** the repository (New Project → Import Git Repository).
+3. Vercel will auto-detect Create React App. Confirm:
+   - **Build Command:** `CI=false npm run build` (or set in vercel.json)
+   - **Output Directory:** `build`
+4. Add **Environment Variables** in Project Settings → Environment Variables:
+   - `REACT_APP_BACKEND_URL` = `https://opteroo-api-staging.on-forge.com` (or your API URL)
+5. Deploy. Preview and production deploys will use these settings.
+
+> `vercel.json` is included with build config and SPA rewrites.
+>
+> **CORS:** Add your Vercel URL(s) to `CORS_ALLOWED_ORIGINS` in the Laravel API `.env`, e.g. `https://your-project.vercel.app,https://your-project-*.vercel.app`.
+
 ## Troubleshooting
 
 - Port conflict on `3000`:
