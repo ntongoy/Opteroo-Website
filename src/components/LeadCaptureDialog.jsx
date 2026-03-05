@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import axios from "axios";
@@ -40,8 +40,8 @@ export const LeadCaptureDialog = ({ open, onOpenChange, leadType }) => {
 
   const {
     register,
+    control,
     handleSubmit,
-    setValue,
     reset,
     formState: { errors },
   } = useForm({
@@ -82,13 +82,14 @@ export const LeadCaptureDialog = ({ open, onOpenChange, leadType }) => {
   const EOI_API_URL = `${BACKEND_URL}/api/v1/eoi`;
 
   const buildPayload = (data) => ({
-    first_name: data.first_name,
-    last_name: data.last_name,
-    email: data.email,
-    company: data.company || null,
-    company_abn: data.company_abn || null,
-    role: data.role || null,
-    purpose: data.purpose || null,
+    first_name: (data.first_name || "").trim(),
+    last_name: (data.last_name || "").trim(),
+    email: (data.email || "").trim().toLowerCase(),
+    company: (data.company || "").trim() || null,
+    company_name: (data.company || "").trim() || null,
+    company_abn: (data.company_abn || "").trim() || null,
+    role: (data.role || "").trim() || null,
+    purpose: (data.purpose || "").trim() || null,
   });
 
   const onSubmit = async (data) => {
@@ -105,12 +106,13 @@ export const LeadCaptureDialog = ({ open, onOpenChange, leadType }) => {
     } catch (error) {
       console.error("EOI submission error:", error);
       const res = error.response?.data;
-      const msg =
-        res?.message ||
-        (res?.errors && typeof res.errors === "object"
-          ? Object.values(res.errors).flat().join(" ")
-          : null) ||
-        "Something went wrong. Please try again.";
+      let msg = res?.message || "Something went wrong. Please try again.";
+      if (res?.errors && typeof res.errors === "object") {
+        const parts = Object.entries(res.errors).flatMap(([field, msgs]) =>
+          (Array.isArray(msgs) ? msgs : [msgs]).map((m) => (field ? `${field}: ${m}` : m))
+        );
+        if (parts.length) msg = parts.join(". ");
+      }
       toast.error(msg);
     } finally {
       setIsSubmitting(false);
@@ -210,20 +212,26 @@ export const LeadCaptureDialog = ({ open, onOpenChange, leadType }) => {
 
           <div className="space-y-2">
             <Label>Purpose *</Label>
-            <Select
-              onValueChange={(value) =>
-                setValue("purpose", value, { shouldValidate: true })
-              }
-            >
-              <SelectTrigger data-testid="lead-purpose-select">
-                <SelectValue placeholder="Select purpose" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="pilot">Pilot</SelectItem>
-                <SelectItem value="evaluate">Evaluate</SelectItem>
-                <SelectItem value="full_use">Full Use</SelectItem>
-              </SelectContent>
-            </Select>
+            <Controller
+              name="purpose"
+              control={control}
+              rules={{ required: "Please select a purpose" }}
+              render={({ field }) => (
+                <Select
+                  value={field.value}
+                  onValueChange={(v) => field.onChange(v)}
+                >
+                  <SelectTrigger data-testid="lead-purpose-select">
+                    <SelectValue placeholder="Select purpose" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pilot">Pilot</SelectItem>
+                    <SelectItem value="evaluate">Evaluate</SelectItem>
+                    <SelectItem value="full_use">Full Use</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+            />
             {errors.purpose && (
               <p className="text-xs text-red-500">{errors.purpose.message}</p>
             )}
