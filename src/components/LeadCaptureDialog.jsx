@@ -95,11 +95,23 @@ export const LeadCaptureDialog = ({ open, onOpenChange, leadType }) => {
   const onSubmit = async (data) => {
     setIsSubmitting(true);
     try {
-      await axios.post(EOI_API_URL, buildPayload(data), {
+      const res = await axios.post(EOI_API_URL, buildPayload(data), {
         headers: { "Content-Type": "application/json", Accept: "application/json" },
       });
+
+      // Trigger admin notification via Opteroo-Website serverless (fire-and-forget)
+      if (res.data?.success && res.data?.trigger_admin_email && res.data?.eoi) {
+        const origin = window.location.origin;
+        fetch(`${origin}/api/eoi-admin-notify`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(res.data.eoi),
+        }).catch((err) => console.warn("Admin email trigger failed:", err));
+      }
+
       toast.success(
-        "Your expression of interest has been submitted successfully. We will be in touch shortly."
+        res.data?.data?.message ||
+          "Your expression of interest has been submitted successfully. We will be in touch shortly."
       );
       reset();
       onOpenChange(false);

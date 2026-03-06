@@ -2,6 +2,17 @@
 
 Marketing website frontend for Opteroo, built with Create React App + CRACO.
 
+## Versioning
+
+- **Format:** Semantic versioning `MAJOR.MINOR.PATCH` (e.g. `0.1.1`)
+- **When to bump:** `PATCH` for bug fixes, `MINOR` for new features, `MAJOR` for breaking changes
+
+### Version notes
+
+| Version | Notes |
+|---------|-------|
+| **0.1.1** (2026-03-05) | **EOI admin email via serverless:** Added `api/eoi-admin-notify` Vercel function to send admin notifications when new EOI is submitted. LeadCaptureDialog triggers it on success when API returns `trigger_admin_email: true`. Requires `MAIL_ADMIN_EMAIL`, `SMTP_*` env vars. Use `vercel dev` for local testing. |
+
 ## Prerequisites
 
 - Node.js 20+ (Node 22+ recommended)
@@ -63,6 +74,7 @@ CI=false npm run build
    - **Output Directory:** `build`
 4. Add **Environment Variables** in Project Settings → Environment Variables:
    - `REACT_APP_BACKEND_URL` = `https://opteroo-api-staging.on-forge.com` (or your API URL)
+   - For EOI admin notifications (`/api/eoi-admin-notify`): `MAIL_ADMIN_EMAIL`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD` (see `.env.example`)
 5. Deploy. Preview and production deploys will use these settings.
 
 > `vercel.json` is included with build config and SPA rewrites.
